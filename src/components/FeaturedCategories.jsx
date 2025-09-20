@@ -24,13 +24,13 @@ const categories = [
       {
     id: 3,
     title: "Earrings ˚⋆𐙚｡",
-    imageUrl: "https://i.postimg.cc/BQPjC235/image.png",
+    imageUrl: "https://pbs.twimg.com/media/G1SoQphW8AAN_8l?format=png&name=small",
       link: "Earrings"
   },
       {
     id: 4,
     title: "Resin jhumkas ｡°✩",
-    imageUrl:"https://i.postimg.cc/kgdgFZf9/image.png",
+    imageUrl:"https://pbs.twimg.com/media/G1Sn5keXEAAWjmD?format=png&name=small",
      link: "Resin jhumkas"
   },
         {
@@ -54,7 +54,7 @@ const categories = [
       {
       id: 7,
     title: "Rings⋆⭒˚.⋆",
-    imageUrl:"https://i.postimg.cc/KvQmBzk7/image.png",
+    imageUrl:"https://pbs.twimg.com/media/G1Sn4YIWcAAnzup?format=png&name=small",
      link: "Rings"
   },
       {
