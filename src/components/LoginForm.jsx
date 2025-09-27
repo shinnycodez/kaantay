@@ -110,7 +110,7 @@ const LoginForm = () => {
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-black shadow-lg transform -skew-y-3 sm:skew-y-0 sm:-rotate-3 rounded-2xl sm:rounded-3xl"></div>
 
-          <div className="relative bg-[#FFF2EB] shadow-md rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10">
+          <div className="relative bg-[#bfaedb] shadow-md rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-10">
             <div className="text-center mb-6">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
                 {isSignUp ? 'Create Account' : 'Login'}

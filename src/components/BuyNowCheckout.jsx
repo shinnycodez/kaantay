@@ -18,7 +18,7 @@ const BuyNowCheckout = () => {
     region: '',
     country: '',
     shippingMethod: 'Standard Delivery',
-    paymentMethod: 'JazzCash/Bank Transfer',
+    paymentMethod: 'Cash on Delivery',
     promoCode: '',
     notes: '',
   });
@@ -47,8 +47,7 @@ const BuyNowCheckout = () => {
   }, []);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-const shippingCost = form.city.trim().toLowerCase() === 'lahore' ? 200 : 350;
-
+  const shippingCost = 250; // Flat shipping rate for all cities
   const total = subtotal + shippingCost;
 
   const handleChange = (e) => {
@@ -63,8 +62,8 @@ const shippingCost = form.city.trim().toLowerCase() === 'lahore' ? 200 : 350;
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
     
-    // Clear the Base64 string if payment method changes from JazzCash/Bank Transfer
-    if (name === 'paymentMethod' && value !== 'JazzCash/Bank Transfer') {
+    // Clear the Base64 string if payment method changes from EasyPaisa
+    if (name === 'paymentMethod' && value !== 'EasyPaisa') {
       setBankTransferProofBase64(null);
       setErrors(prev => ({ ...prev, bankTransferProof: '' }));
     }
@@ -122,7 +121,7 @@ const shippingCost = form.city.trim().toLowerCase() === 'lahore' ? 200 : 350;
       newErrors.phone = 'Please enter a valid phone number (at least 7 digits)';
     }
 
-    if (form.paymentMethod === 'JazzCash/Bank Transfer' && !bankTransferProofBase64) {
+    if (form.paymentMethod === 'EasyPaisa' && !bankTransferProofBase64) {
       newErrors.bankTransferProof = 'Please upload a screenshot of your JazzCash transfer or bank transfer receipt.';
     }
 
@@ -184,7 +183,7 @@ const shippingCost = form.city.trim().toLowerCase() === 'lahore' ? 200 : 350;
       createdAt: new Date(),
       status: 'processing',
       buyNow: true,
-      bankTransferProofBase64: form.paymentMethod === 'JazzCash/Bank Transfer' ? bankTransferProofBase64 : null,
+      bankTransferProofBase64: form.paymentMethod === 'EasyPaisa' ? bankTransferProofBase64 : null,
     };
 
     try {
@@ -385,7 +384,7 @@ const shippingCost = form.city.trim().toLowerCase() === 'lahore' ? 200 : 350;
                   <div className="ml-3">
                     <p className="font-medium text-gray-900 text-sm sm:text-base">Standard Delivery</p>
                     <p className="text-xs sm:text-sm text-gray-500">
-                  PKR 200 for lahore and 350 for other cities - Delivery in 8-10 business days
+                      PKR 250 for all cities - Delivery in 8-10 business days
                     </p>
                   </div>
                 </label>
@@ -394,7 +393,7 @@ const shippingCost = form.city.trim().toLowerCase() === 'lahore' ? 200 : 350;
               <h2 className="text-lg sm:text-xl font-semibold mt-8 mb-6 pb-2 border-b">Payment Method</h2>
               
               <div className="space-y-4">
-                {['JazzCash/Bank Transfer'].map(method => (
+                {['Cash on Delivery', 'EasyPaisa'].map(method => (
                   <label key={method} className="flex items-center p-4 border rounded-md hover:border-black cursor-pointer">
                     <input
                       type="radio"
@@ -404,24 +403,27 @@ const shippingCost = form.city.trim().toLowerCase() === 'lahore' ? 200 : 350;
                       onChange={handleChange}
                       className="h-4 w-4 text-black focus:ring-black border-gray-300"
                     />
-                    <span className="ml-3 font-medium text-gray-900 text-sm sm:text-base">{method}</span>
+                    <div className="ml-3">
+                      <span className="font-medium text-gray-900 text-sm sm:text-base">{method}</span>
+                      {method === 'Cash on Delivery' && (
+                        <p className="text-sm text-gray-500 mt-1">
+                          Pay when your order is delivered (No extra fee)
+                        </p>
+                      )}
+                    </div>
                   </label>
                 ))}
               </div>
 
-              {form.paymentMethod === 'JazzCash/Bank Transfer' && (
+              {form.paymentMethod === 'EasyPaisa' && (
                 <div className="mt-6 p-4 border border-blue-300 bg-blue-50 rounded-md">
-                  <h3 className="text-base sm:text-lg font-semibold mb-3">JazzCash/Bank Transfer Details</h3>
+                  <h3 className="text-base sm:text-lg font-semibold mb-3">EasyPaisa Details</h3>
                   <p className="text-gray-700 mb-4 text-sm sm:text-base">
                     Please transfer the total amount of PKR {total.toLocaleString()} to our account:
                   </p>
-  <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-                     <li><strong>Account Name:</strong> Haba Amin </li>
-                    <li><strong>JazzCash Number:</strong> 03234016813</li>
-                    <li><strong>Bank Account Details:</strong> </li>
-                    <li><strong>Bank name</strong> Meezan Bank</li>
-                    <li><strong>Account name</strong> AYESHA AMIN</li>
-                    <li><strong>Account number</strong> 02360112042678</li>
+                  <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
+                     <li><strong>Account Name:</strong> Muhammad Azam Latif </li>
+                    <li><strong>EasyPaisa Number:</strong> 03445288889</li>
                   </ul>
                   
                   <p className="text-gray-700 mb-4 text-sm sm:text-base">

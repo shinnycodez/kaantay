@@ -4,15 +4,15 @@ import { Link } from 'react-router-dom';
 const categories = [
     {
     id: 1,
-    title: "Bracelets ˚⊹♡",
-    imageUrl: "https://i.postimg.cc/wx0XrXnS/image.png",
-    link: "Bracelets"
+    title: "Kaantay",
+    imageUrl: "https://i.pinimg.com/736x/a5/81/8f/a5818ffe6a4a40971d2cafded0bb4025.jpg",
+    link: "Kaantay"
   },
   {
     id: 2,
-    title: "Pendants ⋆｡𖦹°",
-    imageUrl: "https://i.postimg.cc/CLRq6WGq/image.png",
-      link: "Pendants",
+    title: "Ear studs",
+    imageUrl: "https://i.pinimg.com/736x/75/ce/eb/75ceeb6b88edfca18983030e9f6bb046.jpg",
+      link: "Ear studs",
   },
 
 
@@ -23,52 +23,83 @@ const categories = [
   // },
       {
     id: 3,
-    title: "Earrings ˚⋆𐙚｡",
-    imageUrl: "https://pbs.twimg.com/media/G1SoQphW8AAN_8l?format=png&name=small",
-      link: "Earrings"
+    title: "Hair accessories",
+    imageUrl: "https://i.pinimg.com/736x/22/0f/88/220f8872a89702858835f393d3e57ae7.jpg",
+      link: "Hair accessories"
   },
       {
     id: 4,
-    title: "Resin jhumkas ｡°✩",
-    imageUrl:"https://pbs.twimg.com/media/G1Sn5keXEAAWjmD?format=png&name=small",
-     link: "Resin jhumkas"
+    title: "Kids accessories",
+    imageUrl:"https://i.pinimg.com/736x/1c/bb/75/1cbb7519e7a0e6bb3aaa6ff90d1f64a5.jpg",
+     link: "Kids accessories"
   },
         {
     id: 5,
-    title: "Vintage Collection⋆⭒˚.⋆",
-    imageUrl:"https://i.postimg.cc/ZYd98r48/image.png",
-     link: "Vintage Collection"
+    title: "Rings",
+    imageUrl:"https://i.pinimg.com/736x/31/b4/e6/31b4e60278a74ff153355d03c2adb079.jpg",
+     link: "Rings"
   },
   {
       id: 6,
-    title: "Gifts ⋆⭒˚.⋆",
-    imageUrl:"https://i.postimg.cc/cH8JcSyx/image.png",
-     link: "Gifts"
+    title: "Bangles",
+    imageUrl:"https://i.pinimg.com/736x/c1/3a/0f/c13a0f160a589240038f9419e3167f3e.jpg",
+     link: "Bangles"
   },
     {
       id: 7,
-    title: "Flower preservation⋆⭒˚.⋆",
-    imageUrl:"https://i.postimg.cc/HLrWpgLw/image.png",
-     link: "Flower preservation"
+    title: "Bracelets",
+    imageUrl:"https://i.pinimg.com/736x/13/fe/02/13fe026574d9fc451645eb06013c1a53.jpg",
+     link: "Bracelets"
   },
       {
       id: 7,
-    title: "Rings⋆⭒˚.⋆",
-    imageUrl:"https://pbs.twimg.com/media/G1Sn4YIWcAAnzup?format=png&name=small",
-     link: "Rings"
+    title: "Pendants",
+    imageUrl:"https://i.pinimg.com/736x/9f/d5/61/9fd5614d7c7a18266c7a80f57657716f.jpg",
+     link: "Pendants"
   },
       {
       id: 7,
-    title: "3 piece sets⭒˚.⋆",
-    imageUrl:"https://i.postimg.cc/9Q4s0FGQ/image.png",
-     link: "3 piece sets"
+    title: "Anklets",
+    imageUrl:"https://i.pinimg.com/736x/67/a7/ee/67a7ee49cdfdccb1612a114b30b8f051.jpg",
+     link: "Anklets"
   },
         {
       id: 7,
-    title: "Charms⭒˚.⋆",
-    imageUrl:"https://i.postimg.cc/pXS1wbgb/image.png",
-     link: "charms"
+    title: "Nose pins",
+    imageUrl:"https://i.pinimg.com/736x/37/9a/e8/379ae8e9431c54fb34e9638a02e207ba.jpg",
+     link: "Nose pins"
   },
+          {
+      id: 7,
+    title: "Jewelry sets",
+    imageUrl:"https://i.pinimg.com/736x/7d/a4/8c/7da48ca611a797be38fd07d66c2f34e5.jpg",
+     link: "Jewelry sets"
+  },
+          {
+      id: 7,
+    title: "Cosmetics",
+    imageUrl:"https://i.pinimg.com/736x/63/f4/f7/63f4f7da9178eb2d6dfe48e00f0bc06f.jpg",
+     link: "Cosmetics"
+  },
+          {
+      id: 7,
+    title: "Hijab accessories",
+    imageUrl:"https://i.pinimg.com/1200x/34/eb/68/34eb68d145d790197208134eb8243c1f.jpg",
+     link: "Hijab accessories"
+  },
+          {
+      id: 7,
+    title: "Mehndi",
+    imageUrl:"https://i.pinimg.com/1200x/02/52/29/0252292301c34aadae53a642eb8f5c93.jpg",
+     link: "Mehndi"
+  },
+          {
+      id: 7,
+    title: "Mystery boxes",
+    imageUrl:"https://i.pinimg.com/1200x/2b/23/ff/2b23ff8b786a868218638f833ccc20b7.jpg",
+     link: "Mystery boxes"
+  },
+
   //       {
   //   id: 6,
   //   title: "Bag charms",
@@ -80,7 +111,7 @@ const categories = [
 function FeaturedCategories() {
   return (
 <div>
-  <h2 className="text-[#141414] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
+  <h2 className="text-[#FFFFFF] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
     Featured Categories
   </h2>
 

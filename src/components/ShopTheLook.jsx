@@ -29,7 +29,7 @@ function ShopTheLook() {
 
   return (
     <div className="mb-8">
-      <h2 className="text-[#141414] text-2xl md:text-3xl font-bold leading-tight tracking-[-0.015em] px-4 pb-4 pt-6">
+      <h2 className="text-[#FFFFFF] text-2xl md:text-3xl font-bold leading-tight tracking-[-0.015em] px-4 pb-4 pt-6">
        top sellers ⋆｡𖦹°⭒˚｡⋆
       </h2>
 

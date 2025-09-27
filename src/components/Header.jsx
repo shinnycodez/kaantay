@@ -32,25 +32,25 @@ const Header = () => {
     }
   };
 
-  const adminEmails = ["mueezimran1@gmail.com", "hibameen90@gmail.com"];
+  const adminEmails = ["mueezimran1@gmail.com", "sabaz5@yahoo.com"];
 
   return (
     <>
-      <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#ededed] bg-[#FFF5EE] px-4 md:px-10 py-3 relative">
+      <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#bfaedb] bg-[#bfaedb] px-4 md:px-10 py-3 relative">
         <div className="flex items-center gap-4 md:gap-8">
-          <Link to="/" className="flex items-center gap-2 md:gap-4 text-[#141414]">
-            <h2 className="text-[#141414] text-lg font-bold leading-tight tracking-[-0.015em]">BY HIBA</h2>
+          <Link to="/" className="flex items-center gap-2 md:gap-4 text-[#FFFFFF]">
+            <h2 className="text-[#FFFFFF] text-lg font-bold leading-tight tracking-[-0.015em]">Kaantay</h2>
           </Link>
 
           <div className="hidden md:flex items-center gap-5 lg:gap-9">
-            <Link to="/" className="text-[#141414] text-sm font-medium transition">Home</Link>
-            <Link to="/products?category=Bracelets" className="text-[#141414] text-sm font-medium transition">Bracelets ˚⊹♡</Link>
-            <Link to="/products?category=Pendants" className="text-[#141414] text-sm font-medium  transition">
-Pendants ⋆｡𖦹°</Link>
-            <Link to="/products?category=Earrings" className="text-[#141414] text-sm font-medium  transition">Earrings ˚⋆𐙚｡</Link>
-            <Link to="/products?category=Resin jhumkas" className="text-[#141414] text-sm font-medium  transition">Resin jhumkas ˚⋆𐙚｡</Link>
+            <Link to="/" className="text-[#FFFFFF] text-sm font-medium transition">Home</Link>
+            <Link to="/products?category=Bracelets" className="text-[#FFFFFF] text-sm font-medium transition">Bracelets</Link>
+            <Link to="/products?category=Pendants" className="text-[#FFFFFF] text-sm font-medium  transition">
+Pendants</Link>
+            <Link to="/products?category=Kaantay" className="text-[#FFFFFF] text-sm font-medium  transition">Kaantay｡</Link>
+            <Link to="/products?category=Rings" className="text-[#FFFFFF] text-sm font-medium  transition">Rings</Link>
             {adminEmails.includes(user?.email) && (
-              <Link to="/admin" className="text-[#141414] text-sm font-medium hover:text-[#0c77f2] transition">Admin</Link>
+              <Link to="/admin" className="text-[#FFFFFF] text-sm font-medium hover:text-[#0c77f2] transition">Admin</Link>
             )}
           </div>
         </div>
@@ -59,15 +59,15 @@ Pendants ⋆｡𖦹°</Link>
           <label className="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
             <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
               <div className="text-neutral-500 flex border-none bg-[#
-#FFF5EE] items-center justify-center pl-4 rounded-l-lg border-r-0">
+#bfaedb] items-center justify-center pl-4 rounded-l-lg border-r-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256">
                   <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
                 </svg>
               </div>
               <input
                 placeholder="Search"
-                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#141414] focus:outline-0 focus:ring-0 border-none bg-[
-#FFF5EE] focus:border-none h-full placeholder:text-neutral-500 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal"
+                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#FFFFFF] focus:outline-0 focus:ring-0 border-none bg-[
+#bfaedb] focus:border-none h-full placeholder:text-neutral-500 px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
@@ -77,12 +77,12 @@ Pendants ⋆｡𖦹°</Link>
 
           <div className="hidden md:flex gap-2 items-center">
             <button onClick={() => setIsCartOpen(true)} className="flex items-center justify-center px-4 h-10 rounded-lg bg-[
-#FFF5EE] text-[#141414] hover:bg-[#FFDCDC] transition">🛒 Cart</button>
+#bfaedb] text-[#FFFFFF] hover:bg-[#FFDCDC] transition">🛒 Cart</button>
             {user ? (
               <>
                 <button onClick={handleLogout} className="px-4 h-10 rounded-lg bg-[#
-#FFF5EE] text-[#141414] text-sm font-semibold hover:bg-[#
-#FFF5EE] transition">Logout</button>
+#bfaedb] text-[#FFFFFF] text-sm font-semibold hover:bg-[#
+#bfaedb] transition">Logout</button>
                 <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#FFE9DD]"
                   style={{
                     backgroundImage: user.photoURL
@@ -95,7 +95,7 @@ Pendants ⋆｡𖦹°</Link>
               <Link
                 to="/login"
                 className="flex items-center justify-center px-4 h-10 rounded-lg bg-[
-#FFF5EE] text-white text-sm font-semibold hover:opacity-90 transition"
+#bfaedb] text-white text-sm font-semibold hover:opacity-90 transition"
               >
                 <p className='text-black'>Login</p>
               </Link>
@@ -104,9 +104,9 @@ Pendants ⋆｡𖦹°</Link>
 
           <div className="md:hidden flex items-center gap-2">
             <button onClick={() => setIsCartOpen(true)} className="h-10 w-10 rounded-lg bg-[#
-#FFF5EE]">🛒</button>
+#bfaedb]">🛒</button>
             <button onClick={toggleMenu} className="h-10 w-10 rounded-lg bg-[
-#FFF5EE]">
+#bfaedb]">
               {isMenuOpen ? (
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -135,18 +135,18 @@ Pendants ⋆｡𖦹°</Link>
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
                 />
-                <button onClick={handleSearchSubmit} className="text-[#141414] hover:text-[#0c77f2]" aria-label="Search">
+                <button onClick={handleSearchSubmit} className="text-[#FFFFFF] hover:text-[#0c77f2]" aria-label="Search">
                   🔍
                 </button>
               </div>
 
-              <Link to="/products?category=Bracelets" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Bracelets ˚⊹♡</Link>
-              <Link to="/products?category=Pendants" onClick={() => setIsMenuOpen(false)} className="blocsk px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Pendants ⋆｡𖦹°
+              <Link to="/products?category=Bracelets" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Bracelets</Link>
+              <Link to="/products?category=Pendants" onClick={() => setIsMenuOpen(false)} className="blocsk px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Pendants
 </Link>
-              <Link to="/products?category=Earrings" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">
-Earrings˚⋆𐙚｡
+              <Link to="/products?category=Kaantay" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">
+Kaantay
 </Link>
-              <Link to="/products?category=Resin jhumkas" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Resin jhumkas ｡°✩
+              <Link to="/products?category=Rings" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Rings
 </Link>
 
               {adminEmails.includes(user?.email) && (
@@ -163,13 +163,13 @@ Earrings˚⋆𐙚｡
                           : 'url("https://www.gravatar.com/avatar/default?s=200&d=mp")'
                       }}></div>
                       <div>
-                        <p className="font-medium text-[#141414]">{user.displayName || user.email}</p>
+                        <p className="font-medium text-[#FFFFFF]">{user.displayName || user.email}</p>
                       </div>
                     </div>
                     <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-red-600 hover:bg-[#] rounded-lg transition">Logout</button>
                   </>
                 ) : (
-                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 text-[#141414] hover:bg-[#FFE9DD] rounded-lg transition font-medium">Login</Link>
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 text-[#FFFFFF] hover:bg-[#FFE9DD] rounded-lg transition font-medium">Login</Link>
                 )}
               </div>
             </div>
