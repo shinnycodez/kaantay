@@ -99,6 +99,12 @@ const categories = [
     imageUrl:"https://i.pinimg.com/1200x/2b/23/ff/2b23ff8b786a868218638f833ccc20b7.jpg",
      link: "Mystery boxes"
   },
+            {
+      id: 7,
+    title: "Deal boxes",
+    imageUrl:"https://i.pinimg.com/736x/ca/1f/00/ca1f00b0f706aecd38625bb070954113.jpg",
+     link: "Deal boxes"
+  },
 
   //       {
   //   id: 6,
