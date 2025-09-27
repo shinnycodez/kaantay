@@ -169,7 +169,7 @@ Kaantay
                     <button onClick={handleLogout} className="w-full text-left px-4 py-3 text-red-600 hover:bg-[#] rounded-lg transition">Logout</button>
                   </>
                 ) : (
-                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 text-[#FFFFFF] hover:bg-[#FFE9DD] rounded-lg transition font-medium">Login</Link>
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition font-medium">Login</Link>
                 )}
               </div>
             </div>
