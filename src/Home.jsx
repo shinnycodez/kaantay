@@ -19,6 +19,19 @@ function Home() {
             <FeaturedCategories />
             <ShopTheLook />
                         <div>
+                                      <div className="mt-10 text-center">
+              <p className="text-lg font-semibold text-gray-800">
+                Or contact us directly on WhatsApp:
+              </p>
+              <a
+                href="https://wa.link/cr321u" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-600 font-bold underline hover:text-green-700"
+              >
+                +92 332 2675517
+              </a>
+            </div>
                   <ContactForm/>
             </div>
          
