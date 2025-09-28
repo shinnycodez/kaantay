@@ -29,7 +29,7 @@ function Home() {
                 rel="noopener noreferrer"
                 className="text-green-600 font-bold underline hover:text-green-700"
               >
-                +92 332 2675517
+             03229855832
               </a>
             </div>
                   <ContactForm/>

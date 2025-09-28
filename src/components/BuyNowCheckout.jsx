@@ -47,7 +47,8 @@ const BuyNowCheckout = () => {
   }, []);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
-  const shippingCost = 250; // Flat shipping rate for all cities
+  const FREE_SHIPPING_THRESHOLD = 2500;
+  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 250;
   const total = subtotal + shippingCost;
 
   const handleChange = (e) => {
@@ -254,6 +255,33 @@ const BuyNowCheckout = () => {
 
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Buy Now Checkout</h1>
 
+          {/* Free Shipping Banner */}
+          {subtotal < FREE_SHIPPING_THRESHOLD && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span className="text-blue-800 font-medium text-sm sm:text-base">
+                  Add PKR {(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()} more to get FREE shipping!
+                </span>
+              </div>
+            </div>
+          )}
+
+          {subtotal >= FREE_SHIPPING_THRESHOLD && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                <span className="text-green-800 font-medium text-sm sm:text-base">
+                  🎉 Congratulations! You've unlocked FREE shipping!
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Left: Form */}
             <div className="bg-[#fefaf9] p-6 rounded-lg shadow-sm">
@@ -384,7 +412,10 @@ const BuyNowCheckout = () => {
                   <div className="ml-3">
                     <p className="font-medium text-gray-900 text-sm sm:text-base">Standard Delivery</p>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      PKR 250 for all cities - Delivery in 8-10 business days
+                      {subtotal >= FREE_SHIPPING_THRESHOLD 
+                        ? "FREE shipping - Delivery in 4-5 business days"
+                        : "PKR 250 for all cities - Delivery in 4-5 business days"
+                      }
                     </p>
                   </div>
                 </label>
@@ -422,7 +453,7 @@ const BuyNowCheckout = () => {
                     Please transfer the total amount of PKR {total.toLocaleString()} to our account:
                   </p>
                   <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-                     <li><strong>Account Name:</strong> Muhammad Azam Latif </li>
+                     <li><strong>Account Name:</strong> Muhammad Azam Latif </li>
                     <li><strong>EasyPaisa Number:</strong> 03445288889</li>
                   </ul>
                   
@@ -545,7 +576,9 @@ const BuyNowCheckout = () => {
                 
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Shipping</span>
-                  <span className="text-sm">PKR {shippingCost.toLocaleString()}</span>
+                  <span className={`text-sm ${shippingCost === 0 ? 'text-green-600 font-medium' : ''}`}>
+                    {shippingCost === 0 ? 'FREE' : `PKR ${shippingCost.toLocaleString()}`}
+                  </span>
                 </div>
                 
                 {form.promoCode && (
@@ -560,6 +593,25 @@ const BuyNowCheckout = () => {
                 <span className="font-medium text-base sm:text-lg">Total</span>
                 <span className="font-bold text-base sm:text-lg">PKR {total.toLocaleString()}</span>
               </div>
+
+              {/* Progress bar for free shipping */}
+              {subtotal < FREE_SHIPPING_THRESHOLD && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between text-xs text-gray-600 mb-2">
+                    <span>Progress to FREE shipping</span>
+                    <span>PKR {(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()} left</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1 text-center">
+                    {Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100)}% towards free shipping
+                  </p>
+                </div>
+              )}
 
               <button
                 onClick={placeOrder}

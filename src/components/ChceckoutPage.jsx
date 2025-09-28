@@ -70,8 +70,11 @@ const CheckoutPage = () => {
   }, []);
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shippingCost = 250; // Flat shipping rate for all cities
+  const freeShippingThreshold = 2500;
+  const baseShippingCost = 250;
+  const shippingCost = subtotal >= freeShippingThreshold ? 0 : baseShippingCost;
   const total = subtotal + shippingCost;
+  const amountForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -253,6 +256,47 @@ const CheckoutPage = () => {
 
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
+          {/* Free Shipping Banner */}
+          {amountForFreeShipping > 0 && (
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 mb-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="h-5 w-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                  </svg>
+                  <span className="text-sm sm:text-base font-medium text-gray-800">
+                    Add PKR {amountForFreeShipping.toLocaleString()} more to get FREE shipping!
+                  </span>
+                </div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium">
+                  Free shipping on orders ≥ PKR 2,500
+                </div>
+              </div>
+              <div className="mt-2">
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min((subtotal / freeShippingThreshold) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Free Shipping Achieved Banner */}
+          {subtotal >= freeShippingThreshold && (
+            <div className="bg-gradient-to-r from-green-100 to-green-50 border border-green-300 rounded-lg p-4 mb-8">
+              <div className="flex items-center">
+                <svg className="h-5 w-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm sm:text-base font-medium text-green-800">
+                  🎉 Congratulations! You've qualified for FREE shipping!
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left: Form */}
             <div className="bg-[#fefaf9] p-6 rounded-lg shadow-sm">
@@ -374,7 +418,11 @@ const CheckoutPage = () => {
                   <div className="ml-3">
                     <p className="font-medium text-gray-900">Standard Delivery</p>
                     <p className="text-sm text-gray-500">
-                      PKR 250 for all cities - Delivery in 8-10 business days
+                      {shippingCost === 0 ? (
+                        <span className="text-green-600 font-medium">FREE - Delivery in 4-5 business days</span>
+                      ) : (
+                        `PKR ${baseShippingCost} for all cities - Delivery in 4-5 business days`
+                      )}
                     </p>
                   </div>
                 </label>
@@ -413,7 +461,7 @@ const CheckoutPage = () => {
                   </p>
                   <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
   
-                     <li><strong>Account Name:</strong> Muhammad Azam Latif </li>
+                     <li><strong>Account Name:</strong> Muhammad Azam Latif </li>
                     <li><strong>EasyPaisa Number:</strong> 03445288889</li>
                   </ul>
                   <p className="text-gray-700 text-sm sm:text-base mb-4">
@@ -529,7 +577,9 @@ const CheckoutPage = () => {
 
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Shipping</span>
-                  <span className="text-sm">PKR {shippingCost.toLocaleString()}</span>
+                  <span className={`text-sm ${shippingCost === 0 ? 'text-green-600 font-medium' : ''}`}>
+                    {shippingCost === 0 ? 'FREE' : `PKR ${shippingCost.toLocaleString()}`}
+                  </span>
                 </div>
 
                 {form.promoCode && (
