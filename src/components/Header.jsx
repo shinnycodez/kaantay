@@ -76,8 +76,7 @@ Pendants</Link>
           </label>
 
           <div className="hidden md:flex gap-2 items-center">
-            <button onClick={() => setIsCartOpen(true)} className="flex items-center justify-center px-4 h-10 rounded-lg bg-[
-#bfaedb] text-[#FFFFFF] hover:bg-[#FFDCDC] transition">🛒 Cart</button>
+            <button onClick={() => setIsCartOpen(true)} className="flex items-center justify-center px-4 h-10 rounded-lg bg-[#9f8ac5] text-[#FFFFFF] hover:bg-[#9f8ac5] transition">🛒 Cart</button>
             {user ? (
               <>
                 <button onClick={handleLogout} className="px-4 h-10 rounded-lg bg-[#
@@ -103,8 +102,7 @@ Pendants</Link>
           </div>
 
           <div className="md:hidden flex items-center gap-2">
-            <button onClick={() => setIsCartOpen(true)} className="h-10 w-10 rounded-lg bg-[#
-#bfaedb]">🛒</button>
+            <button onClick={() => setIsCartOpen(true)} className="h-10 w-10 rounded-lg bg-[#9f8ac5]">🛒</button>
             <button onClick={toggleMenu} className="h-10 w-10 rounded-lg bg-[
 #bfaedb]">
               {isMenuOpen ? (
@@ -139,14 +137,14 @@ Pendants</Link>
                   🔍
                 </button>
               </div>
-
-              <Link to="/products?category=Bracelets" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Bracelets</Link>
-              <Link to="/products?category=Pendants" onClick={() => setIsMenuOpen(false)} className="blocsk px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Pendants
-</Link>
               <Link to="/products?category=Kaantay" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">
 Kaantay
 </Link>
-              <Link to="/products?category=Rings" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Rings
+              <Link to="/products?category=Ear studs" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Ear studs</Link>
+              <Link to="/products?category=Hair accessories" onClick={() => setIsMenuOpen(false)} className="blocsk px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Hair accessories
+</Link>
+
+              <Link to="/products?category=Kids accessories" onClick={() => setIsMenuOpen(false)} className="block px-4 py-3 hover:bg-[#FFE9DD] rounded-lg transition">Kids accessories
 </Link>
 
               {adminEmails.includes(user?.email) && (
