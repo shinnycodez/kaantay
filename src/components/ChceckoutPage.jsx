@@ -479,6 +479,7 @@ const CheckoutPage = () => {
   
                      <li><strong> Easy Paisa Account Name:</strong> Sabahat Fatima </li>
                     <li><strong>EasyPaisa Number:</strong> 03414787267</li>
+                     <li><strong>Bank Name</strong> UBL</li>
                     <li><strong>IBAN</strong> PK18UNIL0109000338906728</li>
                    <li><strong>Account Name</strong>Sabahat Fatima</li>
                   </ul>

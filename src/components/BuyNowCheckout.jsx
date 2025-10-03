@@ -481,6 +481,7 @@ const BuyNowCheckout = () => {
                   <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
                      <li><strong> Easy Paisa Account Name:</strong> Sabahat Fatima </li>
                     <li><strong>EasyPaisa Number:</strong> 03414787267</li>
+                     <li><strong>Bank Name</strong> UBL</li>
                     <li><strong>IBAN</strong> PK18UNIL0109000338906728</li>
                    <li><strong>Account Name</strong>Sabahat Fatima</li>
                   </ul>
