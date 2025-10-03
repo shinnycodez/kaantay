@@ -71,7 +71,17 @@ const CheckoutPage = () => {
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const freeShippingThreshold = 2500;
-  const baseShippingCost = 250;
+  
+  // Determine shipping cost based on city
+  const getSahiwalShippingCost = () => {
+    const city = form.city.toLowerCase().trim();
+    if (city === 'sahiwal') {
+      return 150;
+    }
+    return 250;
+  };
+  
+  const baseShippingCost = getSahiwalShippingCost();
   const shippingCost = subtotal >= freeShippingThreshold ? 0 : baseShippingCost;
   const total = subtotal + shippingCost;
   const amountForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
@@ -85,8 +95,8 @@ const CheckoutPage = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
-    // Clear the Base64 string if payment method changes from EasyPaisa
-    if (name === 'paymentMethod' && value !== 'EasyPaisa') {
+    // Clear the Base64 string if payment method changes from Online Payment
+    if (name === 'paymentMethod' && value !== 'Online Payment') {
       setBankTransferProofBase64(null);
     }
   };
@@ -128,7 +138,7 @@ const CheckoutPage = () => {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    if (form.paymentMethod === 'EasyPaisa' && !bankTransferProofBase64) {
+    if (form.paymentMethod === 'Online Payment' && !bankTransferProofBase64) {
       newErrors.bankTransferProof = 'Please upload a screenshot of your JazzCash transfer or bank transfer receipt.';
     }
 
@@ -185,7 +195,7 @@ const CheckoutPage = () => {
       total,
       createdAt: new Date(),
       status: 'processing',
-      bankTransferProofBase64: form.paymentMethod === 'EasyPaisa' ? bankTransferProofBase64 : null,
+      bankTransferProofBase64: form.paymentMethod === 'Online Payment' ? bankTransferProofBase64 : null,
     };
 
     try {
@@ -421,7 +431,13 @@ const CheckoutPage = () => {
                       {shippingCost === 0 ? (
                         <span className="text-green-600 font-medium">FREE - Delivery in 4-5 business days</span>
                       ) : (
-                        `PKR ${baseShippingCost} for all cities - Delivery in 4-5 business days`
+                        <>
+                          {baseShippingCost === 150 ? (
+                            <>PKR 150 for Sahiwal - Delivery in 4-5 business days</>
+                          ) : (
+                            <>PKR 250 for all other cities - Delivery in 4-5 business days</>
+                          )}
+                        </>
                       )}
                     </p>
                   </div>
@@ -431,7 +447,7 @@ const CheckoutPage = () => {
               <h2 className="text-lg sm:text-xl font-semibold mt-8 mb-6 pb-2 border-b">Payment Method</h2>
 
               <div className="space-y-4">
-                {['Cash on Delivery', 'EasyPaisa'].map(method => (
+                {['Cash on Delivery', 'Online Payment'].map(method => (
                   <label key={method} className="flex items-center p-4 border rounded-md hover:border-black cursor-pointer">
                     <input
                       type="radio"
@@ -453,16 +469,18 @@ const CheckoutPage = () => {
                 ))}
               </div>
 
-              {form.paymentMethod === 'EasyPaisa' && (
+              {form.paymentMethod === 'Online Payment' && (
                 <div className="mt-6 p-4 border border-blue-300 bg-blue-50 rounded-md">
-                  <h3 className="text-base sm:text-lg font-semibold mb-3">EasyPaisa Details</h3>
+                  <h3 className="text-base sm:text-lg font-semibold mb-3">Online Payment Details</h3>
                   <p className="text-gray-700 text-sm sm:text-base mb-4">
                     Please transfer the total amount of PKR {total.toLocaleString()} to our account:
                   </p>
                   <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
   
-                     <li><strong>Account Name:</strong> Muhammad Azam Latif </li>
-                    <li><strong>EasyPaisa Number:</strong> 03445288889</li>
+                     <li><strong> Easy Paisa Account Name:</strong> Sabahat Fatima </li>
+                    <li><strong>EasyPaisa Number:</strong> 03414787267</li>
+                    <li><strong>IBAN</strong> PK18UNIL0109000338906728</li>
+                   <li><strong>Account Name</strong>Sabahat Fatima</li>
                   </ul>
                   <p className="text-gray-700 text-sm sm:text-base mb-4">
                     After making the transfer, please upload a screenshot of the transaction or bank transfer receipt as proof of payment.
@@ -618,6 +636,7 @@ const CheckoutPage = () => {
               <div className="mt-6 text-center text-xs sm:text-sm text-gray-500">
                 <p>100% secure checkout</p>
               </div>
+            
             </div>
           </div>
         </div>

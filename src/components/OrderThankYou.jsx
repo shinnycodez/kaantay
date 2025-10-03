@@ -15,7 +15,7 @@ const OrderThankYou = () => {
         <div className="text-pink-500 text-5xl mb-4">
           <FaHeart className="mx-auto animate-bounce" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Thankyou For Ordering Luvvv 🍓</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Thankyou For Ordering</h1>
         <p className="text-gray-600 mb-6">
           Your order has been placed successfully. 
         </p>

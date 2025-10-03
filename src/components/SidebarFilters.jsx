@@ -8,7 +8,24 @@ function SidebarFilters({ onFilterChange, onClose }) {
   });
 
   const options = {
-    Category: ['Phone charms', 'Keychains', 'Bracelet', 'Earings', 'Necklaces', 'Plushies'],
+ Category: [
+  "Kaantay",
+  "Ear studs",
+  "Hair accessories",
+  "Kids accessories",
+  "Rings",
+  "Bangles",
+  "Bracelets",
+  "Pendants",
+  "Anklets",
+  "Nose pins",
+  "Jewelry sets",
+  "Cosmetics",
+  "Hijab accessories",
+  "Mehndi",
+  "Mystery boxes",
+  "Deal boxes"
+],
     Availability: [true, false],
   };
 

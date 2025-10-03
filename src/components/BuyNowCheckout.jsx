@@ -46,9 +46,25 @@ const BuyNowCheckout = () => {
     }
   }, []);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   const FREE_SHIPPING_THRESHOLD = 2500;
-  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 250;
+  
+  // Calculate shipping cost based on city
+  const calculateShippingCost = () => {
+    if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+      return 0;
+    }
+    
+    // Check if city is Sahiwal (case insensitive)
+    if (form.city && form.city.toLowerCase().trim() === 'sahiwal') {
+      return 150;
+    }
+    
+    // Default shipping cost for other cities
+    return 250;
+  };
+
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
+  const shippingCost = calculateShippingCost();
   const total = subtotal + shippingCost;
 
   const handleChange = (e) => {
@@ -63,8 +79,8 @@ const BuyNowCheckout = () => {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
     
-    // Clear the Base64 string if payment method changes from EasyPaisa
-    if (name === 'paymentMethod' && value !== 'EasyPaisa') {
+    // Clear the Base64 string if payment method changes from Online Payment
+    if (name === 'paymentMethod' && value !== 'Online Payment') {
       setBankTransferProofBase64(null);
       setErrors(prev => ({ ...prev, bankTransferProof: '' }));
     }
@@ -122,7 +138,7 @@ const BuyNowCheckout = () => {
       newErrors.phone = 'Please enter a valid phone number (at least 7 digits)';
     }
 
-    if (form.paymentMethod === 'EasyPaisa' && !bankTransferProofBase64) {
+    if (form.paymentMethod === 'Online Payment' && !bankTransferProofBase64) {
       newErrors.bankTransferProof = 'Please upload a screenshot of your JazzCash transfer or bank transfer receipt.';
     }
 
@@ -184,7 +200,7 @@ const BuyNowCheckout = () => {
       createdAt: new Date(),
       status: 'processing',
       buyNow: true,
-      bankTransferProofBase64: form.paymentMethod === 'EasyPaisa' ? bankTransferProofBase64 : null,
+      bankTransferProofBase64: form.paymentMethod === 'Online Payment' ? bankTransferProofBase64 : null,
     };
 
     try {
@@ -209,6 +225,19 @@ const BuyNowCheckout = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get shipping description based on city
+  const getShippingDescription = () => {
+    if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+      return "FREE shipping - Delivery in 4-5 business days";
+    }
+    
+    if (form.city && form.city.toLowerCase().trim() === 'sahiwal') {
+      return "PKR 150 for Sahiwal - Delivery in 4-5 business days";
+    }
+    
+    return "PKR 250 for all cities - Delivery in 4-5 business days";
   };
 
   // Show loading if product is not loaded yet
@@ -412,10 +441,7 @@ const BuyNowCheckout = () => {
                   <div className="ml-3">
                     <p className="font-medium text-gray-900 text-sm sm:text-base">Standard Delivery</p>
                     <p className="text-xs sm:text-sm text-gray-500">
-                      {subtotal >= FREE_SHIPPING_THRESHOLD 
-                        ? "FREE shipping - Delivery in 4-5 business days"
-                        : "PKR 250 for all cities - Delivery in 4-5 business days"
-                      }
+                      {getShippingDescription()}
                     </p>
                   </div>
                 </label>
@@ -424,7 +450,7 @@ const BuyNowCheckout = () => {
               <h2 className="text-lg sm:text-xl font-semibold mt-8 mb-6 pb-2 border-b">Payment Method</h2>
               
               <div className="space-y-4">
-                {['Cash on Delivery', 'EasyPaisa'].map(method => (
+                {['Cash on Delivery', 'Online Payment'].map(method => (
                   <label key={method} className="flex items-center p-4 border rounded-md hover:border-black cursor-pointer">
                     <input
                       type="radio"
@@ -446,15 +472,17 @@ const BuyNowCheckout = () => {
                 ))}
               </div>
 
-              {form.paymentMethod === 'EasyPaisa' && (
+              {form.paymentMethod === 'Online Payment' && (
                 <div className="mt-6 p-4 border border-blue-300 bg-blue-50 rounded-md">
-                  <h3 className="text-base sm:text-lg font-semibold mb-3">EasyPaisa Details</h3>
+                  <h3 className="text-base sm:text-lg font-semibold mb-3">Online Payment Details</h3>
                   <p className="text-gray-700 mb-4 text-sm sm:text-base">
                     Please transfer the total amount of PKR {total.toLocaleString()} to our account:
                   </p>
                   <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-                     <li><strong>Account Name:</strong> Muhammad Azam Latif </li>
-                    <li><strong>EasyPaisa Number:</strong> 03445288889</li>
+                     <li><strong> Easy Paisa Account Name:</strong> Sabahat Fatima </li>
+                    <li><strong>EasyPaisa Number:</strong> 03414787267</li>
+                    <li><strong>IBAN</strong> PK18UNIL0109000338906728</li>
+                   <li><strong>Account Name</strong>Sabahat Fatima</li>
                   </ul>
                   
                   <p className="text-gray-700 mb-4 text-sm sm:text-base">
