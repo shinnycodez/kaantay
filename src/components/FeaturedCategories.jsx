@@ -105,6 +105,18 @@ const categories = [
     imageUrl:"https://i.pinimg.com/736x/ca/1f/00/ca1f00b0f706aecd38625bb070954113.jpg",
      link: "Deal boxes"
   },
+              {
+      id: 7,
+    title: "Minor fault",
+    imageUrl:"https://i.pinimg.com/736x/35/21/39/35213912398af2f7b18dc05eeb1a0634.jpg",
+     link: "Minor fault"
+  },
+              {
+      id: 7,
+    title: "Miscellaneous",
+    imageUrl:"https://i.pinimg.com/736x/25/25/50/2525502c62fe0624487ed125ba2f9e14.jpg",
+     link: "Miscellaneous"
+  },
 
   //       {
   //   id: 6,
