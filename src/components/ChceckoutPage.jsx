@@ -33,7 +33,9 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [bankTransferProofBase64, setBankTransferProofBase64] = useState(null);
+  const [codDeliveryProofBase64, setCodDeliveryProofBase64] = useState(null);
   const [convertingImage, setConvertingImage] = useState(false);
+  const [imageType, setImageType] = useState(null); // 'online' or 'cod'
 
   // Load cart items from localStorage or session storage
   useEffect(() => {
@@ -86,6 +88,9 @@ const CheckoutPage = () => {
   const total = subtotal + shippingCost;
   const amountForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
 
+  // Check if advance payment is required for COD
+  const isCodAdvanceRequired = form.paymentMethod === 'Cash on Delivery' && shippingCost > 0 && shippingCost <= 250;
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm(prev => ({
@@ -95,32 +100,63 @@ const CheckoutPage = () => {
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
-    // Clear the Base64 string if payment method changes from Online Payment
-    if (name === 'paymentMethod' && value !== 'Online Payment') {
+    // Clear the Base64 strings if payment method changes
+    if (name === 'paymentMethod') {
       setBankTransferProofBase64(null);
+      setCodDeliveryProofBase64(null);
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e, type) => {
     const file = e.target.files[0];
     if (file) {
       setConvertingImage(true);
-      setErrors(prev => ({ ...prev, bankTransferProof: '' }));
+      setImageType(type);
+      
+      if (type === 'online') {
+        setErrors(prev => ({ ...prev, bankTransferProof: '' }));
+      } else if (type === 'cod') {
+        setErrors(prev => ({ ...prev, codDeliveryProof: '' }));
+      }
+
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        if (type === 'online') {
+          setErrors(prev => ({ ...prev, bankTransferProof: 'File size too large. Maximum size is 5MB.' }));
+        } else if (type === 'cod') {
+          setErrors(prev => ({ ...prev, codDeliveryProof: 'File size too large. Maximum size is 5MB.' }));
+        }
+        setConvertingImage(false);
+        return;
+      }
 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setBankTransferProofBase64(reader.result);
+        if (type === 'online') {
+          setBankTransferProofBase64(reader.result);
+        } else if (type === 'cod') {
+          setCodDeliveryProofBase64(reader.result);
+        }
         setConvertingImage(false);
       };
       reader.onerror = (error) => {
         console.error("Error converting file to Base64:", error);
-        setBankTransferProofBase64(null);
+        if (type === 'online') {
+          setBankTransferProofBase64(null);
+        } else if (type === 'cod') {
+          setCodDeliveryProofBase64(null);
+        }
         setConvertingImage(false);
-        setErrors(prev => ({ ...prev, bankTransferProof: 'Failed to read image file.' }));
+        const errorMessage = type === 'online' ? 'bankTransferProof' : 'codDeliveryProof';
+        setErrors(prev => ({ ...prev, [errorMessage]: 'Failed to read image file.' }));
       };
       reader.readAsDataURL(file);
     } else {
-      setBankTransferProofBase64(null);
+      if (type === 'online') {
+        setBankTransferProofBase64(null);
+      } else if (type === 'cod') {
+        setCodDeliveryProofBase64(null);
+      }
     }
   };
 
@@ -138,8 +174,14 @@ const CheckoutPage = () => {
       newErrors.email = 'Please enter a valid email address';
     }
 
+    // Online Payment validation
     if (form.paymentMethod === 'Online Payment' && !bankTransferProofBase64) {
       newErrors.bankTransferProof = 'Please upload a screenshot of your JazzCash transfer or bank transfer receipt.';
+    }
+
+    // Cash on Delivery validation (if advance payment required)
+    if (isCodAdvanceRequired && !codDeliveryProofBase64) {
+      newErrors.codDeliveryProof = `Please upload a screenshot of your Rs 250 delivery charges payment.`;
     }
 
     setErrors(newErrors);
@@ -196,6 +238,9 @@ const CheckoutPage = () => {
       createdAt: new Date(),
       status: 'processing',
       bankTransferProofBase64: form.paymentMethod === 'Online Payment' ? bankTransferProofBase64 : null,
+      codDeliveryProofBase64: form.paymentMethod === 'Cash on Delivery' ? codDeliveryProofBase64 : null,
+      codAdvanceRequired: isCodAdvanceRequired,
+      codAdvanceAmount: isCodAdvanceRequired ? 250 : 0,
     };
 
     try {
@@ -461,7 +506,12 @@ const CheckoutPage = () => {
                       <span className="font-medium text-gray-900">{method}</span>
                       {method === 'Cash on Delivery' && (
                         <p className="text-sm text-gray-500 mt-1">
-                          Pay when your order is delivered (No extra fee)
+                          Pay the remaining balance when your order is delivered
+                          {isCodAdvanceRequired && (
+                            <span className="text-red-600 font-medium">
+                              {' '}(Rs 250 delivery charges required in advance)
+                            </span>
+                          )}
                         </p>
                       )}
                     </div>
@@ -476,12 +526,11 @@ const CheckoutPage = () => {
                     Please transfer the total amount of PKR {total.toLocaleString()} to our account:
                   </p>
                   <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-  
-                     <li><strong> Easy Paisa Account Name:</strong> Sabahat Fatima </li>
+                    <li><strong>Easy Paisa Account Name:</strong> Sabahat Fatima</li>
                     <li><strong>EasyPaisa Number:</strong> 03414787267</li>
-                     <li><strong>Bank Name</strong> UBL</li>
+                    <li><strong>Bank Name</strong> UBL</li>
                     <li><strong>IBAN</strong> PK18UNIL0109000338906728</li>
-                   <li><strong>Account Name</strong>Sabahat Fatima</li>
+                    <li><strong>Account Name</strong>Sabahat Fatima</li>
                   </ul>
                   <p className="text-gray-700 text-sm sm:text-base mb-4">
                     After making the transfer, please upload a screenshot of the transaction or bank transfer receipt as proof of payment.
@@ -493,14 +542,14 @@ const CheckoutPage = () => {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={handleFileChange}
+                      onChange={(e) => handleFileChange(e, 'online')}
                       className={`w-full px-4 py-2 border ${errors.bankTransferProof ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-black focus:border-black`}
                     />
                     {errors.bankTransferProof && <p className="mt-1 text-sm text-red-600">{errors.bankTransferProof}</p>}
                     {bankTransferProofBase64 && (
                       <p className="mt-2 text-sm text-gray-600">Image selected and converted.</p>
                     )}
-                    {convertingImage && (
+                    {convertingImage && imageType === 'online' && (
                       <p className="mt-2 text-sm text-gray-600 flex items-center">
                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -510,6 +559,63 @@ const CheckoutPage = () => {
                       </p>
                     )}
                   </div>
+                </div>
+              )}
+
+              {form.paymentMethod === 'Cash on Delivery' && isCodAdvanceRequired && (
+                <div className="mt-6 p-4 border border-amber-300 bg-amber-50 rounded-md">
+                  <h3 className="text-base sm:text-lg font-semibold mb-3">Cash on Delivery - Advance Payment Required</h3>
+                  <p className="text-gray-700 text-sm sm:text-base mb-4">
+                    For Cash on Delivery orders, we require an advance payment of <strong>Rs 250</strong> for delivery charges. Please transfer this amount to our account:
+                  </p>
+                  <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
+                    <li><strong>Easy Paisa Account Name:</strong> Sabahat Fatima</li>
+                    <li><strong>EasyPaisa Number:</strong> 03414787267</li>
+                    <li><strong>Bank Name</strong> UBL</li>
+                    <li><strong>IBAN</strong> PK18UNIL0109000338906728</li>
+                    <li><strong>Account Name</strong>Sabahat Fatima</li>
+                  </ul>
+                  <p className="text-gray-700 text-sm sm:text-base mb-4">
+                    After making the Rs 250 transfer, please upload a screenshot of the transaction as proof of payment. The remaining balance of <strong>PKR {(total - 250).toLocaleString()}</strong> will be paid when your order is delivered.
+                  </p>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Upload Rs 250 Transfer Screenshot*
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'cod')}
+                      className={`w-full px-4 py-2 border ${errors.codDeliveryProof ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-black focus:border-black`}
+                    />
+                    {errors.codDeliveryProof && <p className="mt-1 text-sm text-red-600">{errors.codDeliveryProof}</p>}
+                    {codDeliveryProofBase64 && (
+                      <p className="mt-2 text-sm text-gray-600">Image selected and converted.</p>
+                    )}
+                    {convertingImage && imageType === 'cod' && (
+                      <p className="mt-2 text-sm text-gray-600 flex items-center">
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Converting image...
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-4 p-3 bg-amber-100 border border-amber-200 rounded-md">
+                    <p className="text-sm text-amber-800">
+                      <strong>Note:</strong> Your order will be processed only after we verify the Rs 250 delivery charges payment.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {form.paymentMethod === 'Cash on Delivery' && !isCodAdvanceRequired && (
+                <div className="mt-6 p-4 border border-green-300 bg-green-50 rounded-md">
+                  <h3 className="text-base sm:text-lg font-semibold mb-3">Cash on Delivery - No Advance Required</h3>
+                  <p className="text-gray-700 text-sm sm:text-base">
+                    <span className="text-green-600 font-medium">Congratulations!</span> Since your order qualifies for free shipping, no advance payment is required. You can pay the full amount of <strong>PKR {total.toLocaleString()}</strong> when your order is delivered.
+                  </p>
                 </div>
               )}
 
@@ -613,6 +719,19 @@ const CheckoutPage = () => {
                 <span className="font-medium text-base sm:text-lg">Total</span>
                 <span className="font-bold text-base sm:text-lg">PKR {total.toLocaleString()}</span>
               </div>
+
+              {isCodAdvanceRequired && (
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-800">Advance Payment Required:</span>
+                    <span className="font-medium text-amber-800">PKR 250</span>
+                  </div>
+                  <div className="flex justify-between text-sm mt-1">
+                    <span className="text-gray-600">Pay at Delivery:</span>
+                    <span className="font-medium">PKR {(total - 250).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={placeOrder}
