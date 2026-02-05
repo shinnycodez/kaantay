@@ -289,18 +289,19 @@ const [formData, setFormData] = useState({
     return { text: "Active", color: "text-green-600" };
   };
 
-  const markAsDelivered = async (orderId) => {
-    try {
-      const orderRef = doc(db, "orders", orderId);
-      await updateDoc(orderRef, {
-        status: "delivered",
-        bankTransferProofBase64: null,
-      });
-      console.log(`Order ${orderId} marked as delivered and bank transfer proof removed.`);
-    } catch (err) {
-      console.error("Failed to mark as delivered:", err);
-    }
-  };
+const markAsDelivered = async (orderId) => {
+  try {
+    const orderRef = doc(db, "orders", orderId);
+    await updateDoc(orderRef, {
+      status: "delivered",
+      bankTransferProofBase64: null,
+      codDeliveryProofBase64: null, // Add this line
+    });
+    console.log(`Order ${orderId} marked as delivered and all payment proofs removed.`);
+  } catch (err) {
+    console.error("Failed to mark as delivered:", err);
+  }
+};
 
   const deleteOrder = async (orderId) => {
     if (confirm("Are you sure you want to delete this order? This action cannot be undone.")) {
@@ -460,9 +461,11 @@ const OrderDetails = ({ order }) => (
   <div className="mt-4 space-y-3 text-sm text-gray-700 p-2 border-t border-gray-200 pt-3">
     <p><strong>Status:</strong> <span className={`font-semibold ${order.status === 'delivered' ? 'text-green-600' : 'text-orange-600'}`}>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></p>
     <p><strong>Payment Method:</strong> {order.payment}</p>
+    
+    {/* Bank Transfer Proof for Online Payment */}
     {order.payment === 'Online Payment' && order.bankTransferProofBase64 && (
       <div className="mt-2">
-        <strong>Bank Transfer Proof:</strong>
+        <strong>Bank Transfer Proof (Full Payment):</strong>
         <div
           className="mt-1 border border-gray-300 p-2 rounded max-w-full sm:max-w-xs overflow-hidden cursor-pointer hover:border-blue-500 transition-colors duration-200"
           onClick={() => setViewingImage(order.bankTransferProofBase64)}
@@ -476,7 +479,32 @@ const OrderDetails = ({ order }) => (
         </div>
       </div>
     )}
+    
+    {/* COD Advance Payment Proof */}
+    {order.payment === 'Cash on Delivery' && order.codDeliveryProofBase64 && (
+      <div className="mt-2">
+        <strong>COD Advance Payment Proof (Rs {order.codAdvanceAmount || 250}):</strong>
+        <div
+          className="mt-1 border border-gray-300 p-2 rounded max-w-full sm:max-w-xs overflow-hidden cursor-pointer hover:border-amber-500 transition-colors duration-200"
+          onClick={() => setViewingImage(order.codDeliveryProofBase64)}
+        >
+          <img
+            src={order.codDeliveryProofBase64}
+            alt="COD Advance Payment Proof"
+            className="w-full h-auto object-contain max-h-64 sm:max-h-80"
+          />
+          <p className="text-center text-xs text-gray-500 mt-1">Click to enlarge</p>
+        </div>
+        {order.codAdvanceRequired && (
+          <p className="text-sm text-amber-700 mt-1">
+            <strong>Note:</strong> Rs {order.codAdvanceAmount || 250} advance payment for delivery charges
+          </p>
+        )}
+      </div>
+    )}
+    
     <p><strong>Shipping Method:</strong> {order.shipping}</p>
+    <p><strong>Shipping Cost:</strong> PKR {order.shippingCost?.toLocaleString()}</p>
     <p><strong>Promo Code:</strong> {order.promoCode || "None"}</p>
     <p><strong>Notes:</strong> {order.notes || "None"}</p>
     <p>
@@ -512,7 +540,6 @@ const OrderDetails = ({ order }) => (
     </div>
   </div>
 );
-
   // New ContactDetails component
   const ContactDetails = ({ contact }) => (
     <div className="mt-4 space-y-3 text-sm text-gray-700 p-4 border-t border-gray-200 pt-3 bg-pink-50 rounded-lg">
