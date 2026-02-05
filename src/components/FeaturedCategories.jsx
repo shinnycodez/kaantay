@@ -107,9 +107,9 @@ const categories = [
   },
               {
       id: 7,
-    title: "Minor fault",
-    imageUrl:"https://i.pinimg.com/736x/35/21/39/35213912398af2f7b18dc05eeb1a0634.jpg",
-     link: "Minor fault"
+    title: "Stationery",
+    imageUrl:"https://i.pinimg.com/1200x/a9/ae/32/a9ae3210a314517cd79fca9025051f0a.jpg",
+     link: "Stationery"
   },
               {
       id: 7,
