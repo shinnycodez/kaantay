@@ -13,7 +13,7 @@ function Home() {
     >
       {/* Notice Bar */}
       <div className="w-full bg-[#301934] text-white text-center py-2 font-semibold text-sm md:text-base">
-        Minimum order should be of Rs. 500 — Orders less than Rs. 500 will not be delivered.
+       Minimum order 750 --- Delivery charges 250 advance for order confirmation
       </div>
 
       <div className="layout-container flex h-full grow flex-col">
