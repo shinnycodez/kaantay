@@ -58,19 +58,20 @@ const BuyNowCheckout = () => {
     
     // Check if city is Sahiwal (case insensitive)
     if (form.city && form.city.toLowerCase().trim() === 'sahiwal') {
-      return 150;
+      return 200; // Updated: Sahiwal delivery charges Rs 200
     }
     
     // Default shipping cost for other cities
-    return 250;
+    return 300; // Updated: Other cities delivery charges Rs 300
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   const shippingCost = calculateShippingCost();
   const total = subtotal + shippingCost;
 
-  // Check if advance payment is required for COD
-  const isCodAdvanceRequired = form.paymentMethod === 'Cash on Delivery' && shippingCost > 0 && shippingCost <= 250;
+  // Check if advance payment is required for COD (now only if shippingCost > 0)
+  // Updated threshold message to reflect Rs 200/300 charges
+  const isCodAdvanceRequired = form.paymentMethod === 'Cash on Delivery' && shippingCost > 0 && shippingCost <= 300;
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -180,7 +181,7 @@ const BuyNowCheckout = () => {
 
     // Cash on Delivery validation (if advance payment required)
     if (isCodAdvanceRequired && !codDeliveryProofBase64) {
-      newErrors.codDeliveryProof = `Please upload a screenshot of your Rs 250 delivery charges payment.`;
+      newErrors.codDeliveryProof = `Please upload a screenshot of your Rs ${shippingCost} delivery charges payment.`;
     }
 
     setErrors(newErrors);
@@ -244,7 +245,7 @@ const BuyNowCheckout = () => {
       bankTransferProofBase64: form.paymentMethod === 'Online Payment' ? bankTransferProofBase64 : null,
       codDeliveryProofBase64: form.paymentMethod === 'Cash on Delivery' ? codDeliveryProofBase64 : null,
       codAdvanceRequired: isCodAdvanceRequired,
-      codAdvanceAmount: isCodAdvanceRequired ? 250 : 0,
+      codAdvanceAmount: isCodAdvanceRequired ? shippingCost : 0,
     };
 
     try {
@@ -278,10 +279,10 @@ const BuyNowCheckout = () => {
     }
     
     if (form.city && form.city.toLowerCase().trim() === 'sahiwal') {
-      return "PKR 150 for Sahiwal - Delivery in 4-5 business days";
+      return "PKR 200 for Sahiwal - Delivery in 4-5 business days"; // Updated
     }
     
-    return "PKR 250 for all cities - Delivery in 4-5 business days";
+    return "PKR 300 for all cities - Delivery in 4-5 business days"; // Updated
   };
 
   // Show loading if product is not loaded yet
@@ -511,7 +512,7 @@ const BuyNowCheckout = () => {
                           Pay the remaining balance when your order is delivered
                           {isCodAdvanceRequired && (
                             <span className="text-red-600 font-medium">
-                              {' '}(Rs 250 delivery charges required in advance)
+                              {' '}(Rs {shippingCost} delivery charges required in advance)
                             </span>
                           )}
                         </p>
@@ -528,11 +529,11 @@ const BuyNowCheckout = () => {
                     Please transfer the total amount of PKR {total.toLocaleString()} to our account:
                   </p>
                   <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
-                     <li><strong> Easy Paisa Account Name:</strong> Sabahat Fatima </li>
+                     <li><strong> Easy Paisa Account Name:</strong> Sabahat Fatima </li>
                     <li><strong>EasyPaisa Number:</strong> 03414787267</li>
                      <li><strong>Bank Name</strong> UBL</li>
                     <li><strong>IBAN</strong> PK18UNIL0109000338906728</li>
-                   <li><strong>Account Name</strong>Sabahat Fatima</li>
+                   <li><strong>Account Name</strong>Sabahat Fatima</li>
                   </ul>
                   
                   <p className="text-gray-700 mb-4 text-sm sm:text-base">
@@ -570,7 +571,7 @@ const BuyNowCheckout = () => {
                 <div className="mt-6 p-4 border border-amber-300 bg-amber-50 rounded-md">
                   <h3 className="text-base sm:text-lg font-semibold mb-3">Cash on Delivery - Advance Payment Required</h3>
                   <p className="text-gray-700 mb-4 text-sm sm:text-base">
-                    For Cash on Delivery orders, we require an advance payment of <strong>Rs 250</strong> for delivery charges. Please transfer this amount to our account:
+                    For Cash on Delivery orders, we require an advance payment of <strong>Rs {shippingCost}</strong> for delivery charges. Please transfer this amount to our account:
                   </p>
                   <ul className="list-disc list-inside text-gray-800 text-sm sm:text-base mb-4">
                     <li><strong>Easy Paisa Account Name:</strong> Sabahat Fatima</li>
@@ -580,11 +581,11 @@ const BuyNowCheckout = () => {
                     <li><strong>Account Name</strong>Sabahat Fatima</li>
                   </ul>
                   <p className="text-gray-700 mb-4 text-sm sm:text-base">
-                    After making the Rs 250 transfer, please upload a screenshot of the transaction as proof of payment. The remaining balance of <strong>PKR {(total - 250).toLocaleString()}</strong> will be paid when your order is delivered.
+                    After making the Rs {shippingCost} transfer, please upload a screenshot of the transaction as proof of payment. The remaining balance of <strong>PKR {(total - shippingCost).toLocaleString()}</strong> will be paid when your order is delivered.
                   </p>
                   <div>
                     <label htmlFor="codDeliveryProof" className="block text-sm font-medium text-gray-700 mb-1">
-                      Upload Rs 250 Transfer Screenshot*
+                      Upload Rs {shippingCost} Transfer Screenshot*
                     </label>
                     <input
                       id="codDeliveryProof"
@@ -609,7 +610,7 @@ const BuyNowCheckout = () => {
                   </div>
                   <div className="mt-4 p-3 bg-amber-100 border border-amber-200 rounded-md">
                     <p className="text-sm text-amber-800">
-                      <strong>Note:</strong> Your order will be processed only after we verify the Rs 250 delivery charges payment.
+                      <strong>Note:</strong> Your order will be processed only after we verify the Rs {shippingCost} delivery charges payment.
                     </p>
                   </div>
                 </div>
@@ -619,7 +620,17 @@ const BuyNowCheckout = () => {
                 <div className="mt-6 p-4 border border-green-300 bg-green-50 rounded-md">
                   <h3 className="text-base sm:text-lg font-semibold mb-3">Cash on Delivery - No Advance Required</h3>
                   <p className="text-gray-700 text-sm sm:text-base">
-                    <span className="text-green-600 font-medium">Congratulations!</span> Since your order qualifies for free shipping, no advance payment is required. You can pay the full amount of <strong>PKR {total.toLocaleString()}</strong> when your order is delivered.
+                    {shippingCost === 0 ? (
+                      <span className="text-green-600 font-medium">Congratulations!</span>
+                    ) : (
+                      <span>Note:</span>
+                    )} 
+                    {' '}
+                    {shippingCost === 0 ? (
+                      "Since your order qualifies for free shipping, no advance payment is required. You can pay the full amount when your order is delivered."
+                    ) : (
+                      `You can pay the full amount of PKR ${total.toLocaleString()} when your order is delivered.`
+                    )}
                   </p>
                 </div>
               )}
@@ -734,11 +745,11 @@ const BuyNowCheckout = () => {
                 <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
                   <div className="flex justify-between text-sm">
                     <span className="text-amber-800">Advance Payment Required:</span>
-                    <span className="font-medium text-amber-800">PKR 250</span>
+                    <span className="font-medium text-amber-800">PKR {shippingCost}</span>
                   </div>
                   <div className="flex justify-between text-sm mt-1">
                     <span className="text-gray-600">Pay at Delivery:</span>
-                    <span className="font-medium">PKR {(total - 250).toLocaleString()}</span>
+                    <span className="font-medium">PKR {(total - shippingCost).toLocaleString()}</span>
                   </div>
                 </div>
               )}
