@@ -13,7 +13,7 @@ function Home() {
     >
       {/* Notice Bar */}
       <div className="w-full bg-[#301934] text-white text-center py-2 font-semibold text-sm md:text-base">
-       Minimum order 700 --- Half payment advance for order confirmation
+       Minimum order 700 --- Half payment advance for order confirmation, 10% off on prepaid orders
       </div>
 
       <div className="layout-container flex h-full grow flex-col">
