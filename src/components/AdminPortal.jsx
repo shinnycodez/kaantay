@@ -7,6 +7,7 @@ import {
   doc,
   onSnapshot,
   serverTimestamp,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import Header from "./Header";
@@ -16,6 +17,7 @@ function AdminPortal() {
   const [salesByMonth, setSalesByMonth] = useState([]);
   const [productSales, setProductSales] = useState([]);
   const [totalSales, setTotalSales] = useState({ day: 0, month: 0, year: 0 });
+  const [searchTerm, setSearchTerm] = useState('');
 
 const [formData, setFormData] = useState({
   title: "",
@@ -27,10 +29,13 @@ const [formData, setFormData] = useState({
   image2: "",
   isTopProduct: false,
   available: true,
-  variationInput: "",      // for temporary color input field
-  variations: [],          // array to hold color variations
-  sizeInput: "",          // for temporary size input field
-  sizes: [],              // array to hold size variations
+  variationInput: "",
+  variations: [],
+  sizeInput: "",
+  sizes: [],
+  // Add stock management fields
+  stock: {}, // Object to track stock by variation/size
+  defaultStock: 0, // Default stock for products without variations
 });
 
   // New discount-related state
@@ -60,6 +65,34 @@ const [formData, setFormData] = useState({
   const [expandedContacts, setExpandedContacts] = useState({}); // New state for expanded contacts
   const [viewingImage, setViewingImage] = useState(null); // State for image viewer
 
+  const filteredProducts = products.filter(product => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Search in title
+    if (product.title?.toLowerCase().includes(searchLower)) return true;
+    
+    // Search in category
+    if (product.category?.toLowerCase().includes(searchLower)) return true;
+    
+    // Search in variations/colors
+    if (product.variations?.some(variation => 
+      variation.toLowerCase().includes(searchLower)
+    )) return true;
+    
+    // Search in sizes
+    if (product.sizes?.some(size => 
+      size.toLowerCase().includes(searchLower)
+    )) return true;
+    
+    // Search in stock keys
+    if (product.stock && Object.keys(product.stock).some(key => 
+      key.toLowerCase().includes(searchLower)
+    )) return true;
+    
+    return false;
+  });
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
       setProducts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
@@ -96,7 +129,16 @@ const [formData, setFormData] = useState({
     });
     return () => unsubscribe();
   }, []);
-
+const deleteOrder = async (orderId) => {
+  if (confirm("Are you sure you want to delete this order? This action cannot be undone.")) {
+    try {
+      await deleteDoc(doc(db, "orders", orderId));
+      console.log(`Order ${orderId} deleted successfully.`);
+    } catch (err) {
+      console.error("Failed to delete order:", err);
+    }
+  }
+};
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
       const ordersData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -292,28 +334,53 @@ const [formData, setFormData] = useState({
 const markAsDelivered = async (orderId) => {
   try {
     const orderRef = doc(db, "orders", orderId);
+    const orderDoc = await getDoc(orderRef);
+    const order = orderDoc.data();
+    
+    // Check if stock was already reduced at order placement
+    if (!order.stockReducedAtOrderPlacement) {
+      // Only deduct stock if it wasn't already reduced
+      for (const item of order.items || []) {
+        const productRef = doc(db, "products", item.productId);
+        const productDoc = await getDoc(productRef);
+        const product = productDoc.data();
+        
+        if (product) {
+          let updateData = {};
+          const quantity = item.quantity || 1;
+          
+          // Deduct stock based on variation/size
+          if (item.variation && product.stock && product.stock[item.variation] !== undefined) {
+            const newStock = Math.max(0, (product.stock[item.variation] || 0) - quantity);
+            updateData[`stock.${item.variation}`] = newStock;
+          } 
+          else if (item.size && product.stock && product.stock[item.size] !== undefined) {
+            const newStock = Math.max(0, (product.stock[item.size] || 0) - quantity);
+            updateData[`stock.${item.size}`] = newStock;
+          }
+          else {
+            // Deduct from default stock
+            const newDefaultStock = Math.max(0, (product.defaultStock || 0) - quantity);
+            updateData.defaultStock = newDefaultStock;
+          }
+          
+          // Update product stock
+          await updateDoc(productRef, updateData);
+        }
+      }
+    }
+    
+    // Mark order as delivered
     await updateDoc(orderRef, {
       status: "delivered",
       bankTransferProofBase64: null,
-      codDeliveryProofBase64: null, // Add this line
     });
-    console.log(`Order ${orderId} marked as delivered and all payment proofs removed.`);
+    
+    console.log(`Order ${orderId} marked as delivered.`);
   } catch (err) {
     console.error("Failed to mark as delivered:", err);
   }
 };
-
-  const deleteOrder = async (orderId) => {
-    if (confirm("Are you sure you want to delete this order? This action cannot be undone.")) {
-      try {
-        await deleteDoc(doc(db, "orders", orderId));
-        console.log(`Order ${orderId} deleted successfully.`);
-      } catch (err) {
-        console.error("Failed to delete order:", err);
-      }
-    }
-  };
-
   // New function to delete contact
   const deleteContact = async (contactId) => {
     if (confirm("Are you sure you want to delete this contact message? This action cannot be undone.")) {
@@ -332,38 +399,35 @@ const handleSubmit = async (e) => {
   setSuccessMsg("");
 
   try {
+    const productData = {
+      title: formData.title,
+      price: parseFloat(formData.price),
+      category: formData.category,
+      description: formData.description,
+      coverImage: formData.coverImage,
+      images: [formData.image1, formData.image2],
+      isTopProduct: formData.isTopProduct,
+      available: formData.available,
+      variations: formData.variations,
+      sizes: formData.sizes,
+      // Add stock data
+      stock: formData.stock,
+      defaultStock: parseInt(formData.defaultStock) || 0,
+    };
+
     if (editId) {
-      await updateDoc(doc(db, "products", editId), {
-        title: formData.title,
-        price: parseFloat(formData.price),
-        category: formData.category,
-        description: formData.description,
-        coverImage: formData.coverImage,
-        images: [formData.image1, formData.image2],
-        isTopProduct: formData.isTopProduct,
-        available: formData.available,
-        variations: formData.variations, // Color variations
-        sizes: formData.sizes, // Size variations
-      });
+      await updateDoc(doc(db, "products", editId), productData);
       setSuccessMsg("✅ Product updated successfully!");
       setEditId(null);
     } else {
       await addDoc(collection(db, "products"), {
-        title: formData.title,
-        price: parseFloat(formData.price),
-        category: formData.category,
-        description: formData.description,
-        coverImage: formData.coverImage,
-        images: [formData.image1, formData.image2],
-        isTopProduct: formData.isTopProduct,
-        available: formData.available,
-        variations: formData.variations, // Color variations
-        sizes: formData.sizes, // Size variations
+        ...productData,
         createdAt: serverTimestamp(),
       });
       setSuccessMsg("✅ Product added successfully!");
     }
 
+    // Reset form (keep the stock reset)
     setFormData({
       title: "",
       price: "",
@@ -374,10 +438,12 @@ const handleSubmit = async (e) => {
       image2: "",
       isTopProduct: false,
       available: true,
-      variations: [], // Reset color variations
-      variationInput: "", // Reset color input field
-      sizes: [], // Reset size variations
-      sizeInput: "" // Reset size input field
+      variations: [],
+      variationInput: "",
+      sizes: [],
+      sizeInput: "",
+      stock: {},
+      defaultStock: 0,
     });
   } catch (err) {
     console.error("Error:", err);
@@ -396,7 +462,6 @@ const handleSubmit = async (e) => {
       }
     }
   };
-
 const handleEdit = (product) => {
   setFormData({
     title: product.title,
@@ -411,7 +476,10 @@ const handleEdit = (product) => {
     variations: product.variations || [], // Color variations
     variationInput: "",
     sizes: product.sizes || [], // Size variations
-    sizeInput: ""
+    sizeInput: "",
+    // Add stock fields
+    stock: product.stock || {}, // Stock by variation/size
+    defaultStock: product.defaultStock || 0, // Default stock
   });
   setEditId(product.id);
   setShowForm(true);
@@ -461,8 +529,7 @@ const OrderDetails = ({ order }) => (
   <div className="mt-4 space-y-3 text-sm text-gray-700 p-2 border-t border-gray-200 pt-3">
     <p><strong>Status:</strong> <span className={`font-semibold ${order.status === 'delivered' ? 'text-green-600' : 'text-orange-600'}`}>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</span></p>
     <p><strong>Payment Method:</strong> {order.payment}</p>
-    
-    {/* Bank Transfer Proof for Online Payment */}
+   {/* Bank Transfer Proof for Online Payment */}
     {order.payment === 'Online Payment' && order.bankTransferProofBase64 && (
       <div className="mt-2">
         <strong>Bank Transfer Proof (Full Payment):</strong>
@@ -502,9 +569,7 @@ const OrderDetails = ({ order }) => (
         )}
       </div>
     )}
-    
     <p><strong>Shipping Method:</strong> {order.shipping}</p>
-    <p><strong>Shipping Cost:</strong> PKR {order.shippingCost?.toLocaleString()}</p>
     <p><strong>Promo Code:</strong> {order.promoCode || "None"}</p>
     <p><strong>Notes:</strong> {order.notes || "None"}</p>
     <p>
@@ -520,6 +585,7 @@ const OrderDetails = ({ order }) => (
         <p>{order.shippingAddress?.city}, {order.shippingAddress?.region}</p>
         <p>{order.shippingAddress?.country}, {order.shippingAddress?.postalCode}</p>
         <p>Phone: {order.shippingAddress?.phone}</p>
+       <p>Instagram: {order.shippingAddress?.customerInstagram}</p>
       </div>
     </div>
 
@@ -540,6 +606,7 @@ const OrderDetails = ({ order }) => (
     </div>
   </div>
 );
+
   // New ContactDetails component
   const ContactDetails = ({ contact }) => (
     <div className="mt-4 space-y-3 text-sm text-gray-700 p-4 border-t border-gray-200 pt-3 bg-pink-50 rounded-lg">
@@ -631,24 +698,96 @@ const OrderDetails = ({ order }) => (
                     {formData.variations.map((v, i) => (
                       <span key={i} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
                         {v}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              variations: prev.variations.filter((_, index) => index !== i),
-                            }))
-                          }
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          &times;
-                        </button>
+<button
+  type="button"
+  onClick={() => {
+    const variationToRemove = formData.variations[i];
+    const updatedVariations = formData.variations.filter((_, index) => index !== i);
+    const updatedStock = { ...formData.stock };
+    delete updatedStock[variationToRemove];
+    
+    setFormData((prev) => ({
+      ...prev,
+      variations: updatedVariations,
+      stock: updatedStock,
+    }));
+  }}
+  className="text-red-500 hover:text-red-700"
+>
+  &times;
+</button>
                       </span>
                     ))}
                   </div>
                 )}
               </div>
+{/* Default Stock Input */}
+<div>
+  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1">
+    Default Stock Quantity
+  </label>
+  <input
+    type="number"
+    name="defaultStock"
+    value={formData.defaultStock}
+    onChange={handleChange}
+    placeholder="Enter stock quantity"
+    min="0"
+    className="w-full border border-gray-300 p-2 rounded-md text-sm sm:text-base"
+  />
+</div>
 
+{/* Stock by Variation (if variations exist) */}
+{formData.variations.length > 0 && (
+  <div>
+    <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+      Stock by Color Variation
+    </label>
+    {formData.variations.map((variation, index) => (
+      <div key={index} className="flex items-center gap-2 mb-2">
+        <span className="w-20 text-sm">{variation}:</span>
+        <input
+          type="number"
+          value={formData.stock[variation] || 0}
+          onChange={(e) => {
+            const newStock = { ...formData.stock };
+            newStock[variation] = parseInt(e.target.value) || 0;
+            setFormData(prev => ({ ...prev, stock: newStock }));
+          }}
+          placeholder="Qty"
+          min="0"
+          className="border border-gray-300 p-2 rounded-md text-sm w-20"
+        />
+      </div>
+    ))}
+  </div>
+)}
+
+{/* Stock by Size (if sizes exist) */}
+{formData.sizes.length > 0 && (
+  <div>
+    <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+      Stock by Size
+    </label>
+    {formData.sizes.map((size, index) => (
+      <div key={index} className="flex items-center gap-2 mb-2">
+        <span className="w-20 text-sm">{size}:</span>
+        <input
+          type="number"
+          value={formData.stock[size] || 0}
+          onChange={(e) => {
+            const newStock = { ...formData.stock };
+            newStock[size] = parseInt(e.target.value) || 0;
+            setFormData(prev => ({ ...prev, stock: newStock }));
+          }}
+          placeholder="Qty"
+          min="0"
+          className="border border-gray-300 p-2 rounded-md text-sm w-20"
+        />
+      </div>
+    ))}
+  </div>
+)}
               {/* Size Variations Input */}
               <div>
                 <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1">Size Variations (e.g., S, M, L)</label>
@@ -684,18 +823,24 @@ const OrderDetails = ({ order }) => (
                     {formData.sizes.map((size, i) => (
                       <span key={i} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
                         {size}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((prev) => ({
-                              ...prev,
-                              sizes: prev.sizes.filter((_, index) => index !== i),
-                            }))
-                          }
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          &times;
-                        </button>
+<button
+  type="button"
+  onClick={() => {
+    const sizeToRemove = formData.sizes[i];
+    const updatedSizes = formData.sizes.filter((_, index) => index !== i);
+    const updatedStock = { ...formData.stock };
+    delete updatedStock[sizeToRemove];
+    
+    setFormData((prev) => ({
+      ...prev,
+      sizes: updatedSizes,
+      stock: updatedStock,
+    }));
+  }}
+  className="text-red-500 hover:text-red-700"
+>
+  &times;
+</button>
                       </span>
                     ))}
                   </div>
@@ -921,76 +1066,132 @@ const OrderDetails = ({ order }) => (
           )}
         </div>
 
-        {/* Product Inventory Section */}
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
-          <button
-            onClick={() => setShowInventory(!showInventory)}
-            className="w-full bg-black text-white px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors duration-200 flex items-center justify-between text-base sm:text-lg font-medium"
+ {/* Product Inventory Section */}
+<div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
+  <button
+    onClick={() => setShowInventory(!showInventory)}
+    className="w-full bg-black text-white px-4 py-3 text-left rounded-md hover:bg-gray-800 transition-colors duration-200 flex items-center justify-between text-base sm:text-lg font-medium"
+  >
+    <span>{showInventory ? "➖ Hide Inventory" : "📦 View Product Inventory"}</span>
+    <svg className={`w-5 h-5 transition-transform duration-200 ${showInventory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+  </button>
+
+  {showInventory && (
+    <div className="mt-4">
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="🔍 Search products by title, category, color, size..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black text-sm sm:text-base"
+          />
+          <svg 
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
           >
-            <span>{showInventory ? "➖ Hide Inventory" : "📦 View Product Inventory"}</span>
-            <svg className={`w-5 h-5 transition-transform duration-200 ${showInventory ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-          </button>
-
-          {showInventory && (
-            <div className="mt-4 bg-gray-50 p-4 sm:p-6 rounded-lg shadow-inner grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {products.length === 0 ? (
-                <p className="col-span-full text-center text-gray-500 text-sm sm:text-base py-4">No products found. Add a product to get started!</p>
-              ) : (
-                products.map((product) => {
-                  // Check if product has any active discount
-                  const activeDiscount = discounts.find(discount => 
-                    discount.productIds.includes(product.id) && isDiscountActive(discount)
-                  );
-                  const discountedPrice = activeDiscount 
-                    ? Math.round(product.price * (1 - activeDiscount.discountPercentage / 100))
-                    : null;
-
-                  return (
-                    <div key={product.id} className={`flex flex-col sm:flex-row gap-4 border border-gray-200 p-4 rounded-md shadow-sm ${product.available === false ? 'bg-gray-100 opacity-80' : 'bg-white'} ${activeDiscount ? 'ring-2 ring-green-300' : ''}`}>
-                      <div className="relative">
-                        <img src={product.coverImage} className="w-24 h-24 object-contain rounded-md flex-shrink-0 mx-auto sm:mx-0" alt={product.title} />
-                        {activeDiscount && (
-                          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            -{activeDiscount.discountPercentage}%
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 text-center sm:text-left">
-                        <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-1">{product.title}</h3>
-                        <div className="text-sm text-gray-700">
-                          {activeDiscount ? (
-                            <div>
-                              <span className="line-through text-red-500">PKR {product.price?.toLocaleString()}</span>
-                              <span className="ml-2 font-bold text-green-600">PKR {discountedPrice?.toLocaleString()}</span>
-                              <p className="text-xs text-green-600 font-medium">{activeDiscount.description || 'On Sale'}</p>
-                            </div>
-                          ) : (
-                            <p>Price: PKR {product.price?.toLocaleString()}</p>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-700">Category: {product.category}</p>
-                        <p className="text-sm text-gray-700">Top Product: {product.isTopProduct ? "Yes" : "No"}</p>
-                        {product.variations && product.variations.length > 0 && (
-                          <p className="text-sm text-gray-700">Colors: {product.variations.join(', ')}</p>
-                        )}
-                        {product.sizes && product.sizes.length > 0 && (
-                          <p className="text-sm text-gray-700">Sizes: {product.sizes.join(', ')}</p>
-                        )}
-                        <p className="text-sm mt-1">Status: <span className={`font-medium ${product.available === false ? 'text-red-600' : 'text-green-600'}`}>
-                          {product.available === false ? 'Out of Stock' : 'Available'}
-                        </span></p>
-                        <div className="mt-3 flex justify-center sm:justify-start gap-2">
-                          <button onClick={() => handleEdit(product)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-xs sm:text-sm rounded-md transition-colors duration-200">Edit</button>
-                          <button onClick={() => handleDelete(product.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-xs sm:text-sm rounded-md transition-colors duration-200">Delete</button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
           )}
         </div>
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-xs text-gray-500">
+            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
+          </p>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="text-xs text-blue-600 hover:text-blue-800"
+            >
+              Clear search
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-inner grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {filteredProducts.length === 0 ? (
+          <p className="col-span-full text-center text-gray-500 text-sm sm:text-base py-4">
+            {searchTerm ? `No products found matching "${searchTerm}"` : 'No products found. Add a product to get started!'}
+          </p>
+        ) : (
+          filteredProducts.map((product) => {
+            // Check if product has any active discount
+            const activeDiscount = discounts.find(discount => 
+              discount.productIds.includes(product.id) && isDiscountActive(discount)
+            );
+            const discountedPrice = activeDiscount 
+              ? Math.round(product.price * (1 - activeDiscount.discountPercentage / 100))
+              : null;
+
+            return (
+              <div key={product.id} className={`flex flex-col sm:flex-row gap-4 border border-gray-200 p-4 rounded-md shadow-sm ${product.available === false ? 'bg-gray-100 opacity-80' : 'bg-white'} ${activeDiscount ? 'ring-2 ring-green-300' : ''}`}>
+                <div className="relative">
+                  <img src={product.coverImage} className="w-24 h-24 object-contain rounded-md flex-shrink-0 mx-auto sm:mx-0" alt={product.title} />
+                  {activeDiscount && (
+                    <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      -{activeDiscount.discountPercentage}%
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="font-semibold text-base sm:text-lg text-gray-900 mb-1">{product.title}</h3>
+                  <div className="text-sm text-gray-700">
+                    {activeDiscount ? (
+                      <div>
+                        <span className="line-through text-red-500">PKR {product.price?.toLocaleString()}</span>
+                        <span className="ml-2 font-bold text-green-600">PKR {discountedPrice?.toLocaleString()}</span>
+                        <p className="text-xs text-green-600 font-medium">{activeDiscount.description || 'On Sale'}</p>
+                      </div>
+                    ) : (
+                      <p>Price: PKR {product.price?.toLocaleString()}</p>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-700">Category: {product.category}</p>
+                  <p className="text-sm text-gray-700">Top Product: {product.isTopProduct ? "Yes" : "No"}</p>
+                  {product.variations && product.variations.length > 0 && (
+                    <p className="text-sm text-gray-700">Colors: {product.variations.join(', ')}</p>
+                  )}
+                  {product.sizes && product.sizes.length > 0 && (
+                    <p className="text-sm text-gray-700">Sizes: {product.sizes.join(', ')}</p>
+                  )}
+                  <p className="text-sm mt-1">Status: <span className={`font-medium ${product.available === false ? 'text-red-600' : 'text-green-600'}`}>
+                    {product.available === false ? 'Out of Stock' : 'Available'}
+                  </span></p>
+                  <p className="text-sm text-gray-700">
+                    Stock: {(() => {
+                      if (Object.keys(product.stock || {}).length > 0) {
+                        return Object.entries(product.stock || {}).map(([key, value]) => 
+                          `${key}: ${value}`
+                        ).join(', ');
+                      }
+                      return product.defaultStock || 0;
+                    })()}
+                  </p>
+                  <div className="mt-3 flex justify-center sm:justify-start gap-2">
+                    <button onClick={() => handleEdit(product)} className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 text-xs sm:text-sm rounded-md transition-colors duration-200">Edit</button>
+                    <button onClick={() => handleDelete(product.id)} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 text-xs sm:text-sm rounded-md transition-colors duration-200">Delete</button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  )}
+</div>
 
         {/* Orders Section */}
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md">
@@ -1213,3 +1414,5 @@ const OrderDetails = ({ order }) => (
 }
 
 export default AdminPortal;
+
+

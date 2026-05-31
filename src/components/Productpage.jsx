@@ -83,6 +83,22 @@ const ProductPage = ({ onOpenCart }) => {
     fetchProduct();
   }, [id, navigate]);
 
+  // Calculate current stock based on selected variation/size
+  const getCurrentStock = () => {
+    if (!product) return 0;
+    
+    return selectedVariation && product.stock && product.stock[selectedVariation] !== undefined 
+      ? product.stock[selectedVariation] 
+      : selectedSize && product.stock && product.stock[selectedSize] !== undefined 
+        ? product.stock[selectedSize] 
+        : product.defaultStock || 0;
+  };
+
+  // Check if item is out of stock
+  const isOutOfStock = () => {
+    return getCurrentStock() === 0;
+  };
+
   // Calculate discounted price
   const getDiscountedPrice = () => {
     if (!activeDiscount) return product.price;
@@ -117,7 +133,15 @@ const ProductPage = ({ onOpenCart }) => {
   };
 
   const handleAddToCart = async () => {
-    if (loading || !product.available) return;
+    if (loading || !product.available || isOutOfStock()) return;
+    
+    const currentStock = getCurrentStock();
+    
+    if (quantity > currentStock) {
+      alert(`⚠️ Only ${currentStock} item${currentStock === 1 ? '' : 's'} available in stock!`);
+      return;
+    }
+    
     setLoading(true);
 
     // Create a unique identifier that includes both variation and size if they exist
@@ -137,6 +161,9 @@ const ProductPage = ({ onOpenCart }) => {
       size: selectedSize, // Include the selected size
       discountApplied: activeDiscount ? activeDiscount.discountPercentage : null,
       createdAt: new Date().toISOString(),
+      // Add stock information for reference
+      maxStock: currentStock,
+      stockType: selectedVariation ? 'variation' : selectedSize ? 'size' : 'default'
     };
 
     try {
@@ -151,8 +178,17 @@ const ProductPage = ({ onOpenCart }) => {
       );
 
       if (existingIndex !== -1) {
+        // Check if adding more would exceed available stock
+        const newTotalQuantity = currentCart[existingIndex].quantity + quantity;
+        if (newTotalQuantity > currentStock) {
+          alert(`⚠️ Cannot add more items. You already have ${currentCart[existingIndex].quantity} in cart, only ${currentStock} available total.`);
+          setLoading(false);
+          return;
+        }
+        
         // Update quantity of existing item
-        currentCart[existingIndex].quantity += quantity;
+        currentCart[existingIndex].quantity = newTotalQuantity;
+        currentCart[existingIndex].maxStock = currentStock; // Update stock reference
       } else {
         // Add new item to cart
         currentCart.push(cartItem);
@@ -170,14 +206,21 @@ const ProductPage = ({ onOpenCart }) => {
 
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Error adding item to cart. Please try again.');
+      alert('❌ Error adding item to cart. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleBuyNow = () => {
-    if (loading || !product.available) return;
+    if (loading || !product.available || isOutOfStock()) return;
+
+    const currentStock = getCurrentStock();
+    
+    if (quantity > currentStock) {
+      alert(`⚠️ Only ${currentStock} item${currentStock === 1 ? '' : 's'} available in stock!`);
+      return;
+    }
 
     const buyNowItem = {
       id: product.id,
@@ -218,6 +261,8 @@ const ProductPage = ({ onOpenCart }) => {
 
   const discountedPrice = getDiscountedPrice();
   const savings = product.price - discountedPrice;
+  const currentStock = getCurrentStock();
+  const outOfStock = isOutOfStock();
 
   return (
     <div className="relative flex min-h-screen flex-col bg-[#bfaedb] overflow-x-hidden">
@@ -305,62 +350,114 @@ const ProductPage = ({ onOpenCart }) => {
               )}
             </div>
             
-            {product.available ? (
-              <p className="text-green-600 font-medium px-4">✅ In Stock</p>
-            ) : (
+            {/* Availability Display */}
+            {outOfStock ? (
               <p className="text-red-600 font-medium px-4">❌ Out of Stock</p>
+            ) : (
+              <p className="text-green-600 font-medium px-4">✅ In Stock</p>
             )}
 
-            {/* Color Variations Selector */}
+            {/* Stock Information Display */}
+            {!outOfStock && (
+              <div className="px-4 py-2">
+                <p className="text-sm text-gray-600">
+                  {selectedVariation && product.stock && product.stock[selectedVariation] !== undefined 
+                    ? `Stock (${selectedVariation}): ${currentStock} available`
+                    : selectedSize && product.stock && product.stock[selectedSize] !== undefined 
+                      ? `Stock (${selectedSize}): ${currentStock} available`
+                      : `Stock: ${currentStock} available`
+                  }
+                </p>
+                
+                {/* Low stock warning */}
+                {currentStock > 0 && currentStock <= 5 && (
+                  <p className="text-sm text-orange-600 font-medium mt-1">
+                    ⚠️ Low stock! Only {currentStock} left
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Color Variations Selector with Stock */}
             {product.variations && product.variations.length > 0 && (
               <div className="px-4 py-3">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Color:</h3>
                 <div className="flex flex-wrap gap-2">
-                  {product.variations.map((variation) => (
-                    <button
-                      key={variation}
-                      type="button"
-                      onClick={() => setSelectedVariation(variation)}
-                      className={`px-3 py-1 rounded-full text-sm border ${
-                        selectedVariation === variation
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white text-gray-800 border-gray-300 hover:border-gray-400'
-                      } transition-colors duration-200`}
-                    >
-                      {variation}
-                    </button>
-                  ))}
+                  {product.variations.map((variation) => {
+                    const variationStock = product.stock && product.stock[variation] !== undefined 
+                      ? product.stock[variation] 
+                      : product.defaultStock || 0;
+                    
+                    return (
+                      <button
+                        key={variation}
+                        type="button"
+                        onClick={() => setSelectedVariation(variation)}
+                        disabled={variationStock === 0}
+                        className={`px-3 py-1 rounded-full text-sm border ${
+                          selectedVariation === variation
+                            ? 'bg-black text-white border-black'
+                            : variationStock === 0
+                              ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                              : 'bg-white text-gray-800 border-gray-300 hover:border-gray-400'
+                        } transition-colors duration-200 relative`}
+                        title={variationStock === 0 ? 'Out of stock' : `${variationStock} available`}
+                      >
+                        {variation}
+                        {variationStock === 0 && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {/* Size Variations Selector */}
+            {/* Size Variations Selector with Stock */}
             {product.sizes && product.sizes.length > 0 && (
               <div className="px-4 py-3">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Size:</h3>
                 <div className="flex flex-wrap gap-2">
-                  {product.sizes.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-3 py-1 rounded-full text-sm border min-w-[40px] ${
-                        selectedSize === size
-                          ? 'bg-green-600 text-white border-green-600'
-                          : 'bg-white text-gray-800 border-gray-300 hover:border-green-400'
-                      } transition-colors duration-200`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {product.sizes.map((size) => {
+                    const sizeStock = product.stock && product.stock[size] !== undefined 
+                      ? product.stock[size] 
+                      : product.defaultStock || 0;
+                    
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setSelectedSize(size)}
+                        disabled={sizeStock === 0}
+                        className={`px-3 py-1 rounded-full text-sm border min-w-[40px] ${
+                          selectedSize === size
+                            ? 'bg-green-600 text-white border-green-600'
+                            : sizeStock === 0
+                              ? 'bg-gray-100 text-gray-400 border-gray-300 cursor-not-allowed'
+                              : 'bg-white text-gray-800 border-gray-300 hover:border-green-400'
+                        } transition-colors duration-200 relative`}
+                        title={sizeStock === 0 ? 'Out of stock' : `${sizeStock} available`}
+                      >
+                        {size}
+                        {sizeStock === 0 && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            <QuantitySelector quantity={quantity} setQuantity={setQuantity} />
+            <QuantitySelector 
+              quantity={quantity} 
+              setQuantity={setQuantity}
+              maxQuantity={outOfStock ? 0 : currentStock}
+            />
 
             {/* Discount Timer (if discount is active) */}
-            {activeDiscount && (
+            {activeDiscount && !outOfStock && (
               <div className="mx-4 mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-red-600 font-bold text-sm">🔥 LIMITED TIME OFFER</span>
@@ -374,11 +471,11 @@ const ProductPage = ({ onOpenCart }) => {
             <div className="flex flex-col gap-3 p-4">
               <button
                 onClick={handleAddToCart}
-                disabled={!product.available || loading}
+                disabled={loading || outOfStock || !product.available}
                 className={`w-full border-2 py-3 px-4 rounded-xl font-medium text-base transition-colors ${
-                  product.available && !loading
+                  !loading && !outOfStock && product.available
                     ? 'border-black text-black hover:bg-gray-100'
-                    : 'border-gray-400 text-gray-400 cursor-not-allowed'
+                    : 'border-gray-400 text-gray-400 cursor-not-allowed bg-gray-100'
                 }`}
               >
                 {loading ? (
@@ -389,6 +486,8 @@ const ProductPage = ({ onOpenCart }) => {
                     </svg>
                     Adding...
                   </span>
+                ) : outOfStock ? (
+                  'Out of Stock'
                 ) : activeDiscount ? (
                   `Add to Cart - PKR ${getCurrentPrice().toLocaleString()}`
                 ) : (
@@ -398,18 +497,18 @@ const ProductPage = ({ onOpenCart }) => {
 
               <button
                 onClick={handleBuyNow}
-                disabled={!product.available || loading}
+                disabled={loading || outOfStock || !product.available}
                 className={`w-full py-3 px-4 rounded-xl font-medium text-base transition-colors ${
-                  product.available && !loading
+                  !loading && !outOfStock && product.available
                     ? 'bg-[#D57A91] text-white hover:bg-[#FCBACB]'
                     : 'bg-gray-400 text-white cursor-not-allowed'
                 }`}
               >
-                {activeDiscount ? `Buy Now - PKR ${getCurrentPrice().toLocaleString()}` : 'Buy Now'}
+                {outOfStock ? 'Out of Stock' : activeDiscount ? `Buy Now - PKR ${getCurrentPrice().toLocaleString()}` : 'Buy Now'}
               </button>
 
               {/* Savings highlight */}
-              {activeDiscount && (
+              {activeDiscount && !outOfStock && (
                 <div className="text-center p-2 bg-green-100 rounded-lg">
                   <p className="text-green-700 font-medium text-sm">
                     💰 You're saving PKR {(savings * quantity).toLocaleString()} on this purchase!
